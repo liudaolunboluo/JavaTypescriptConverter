@@ -44,12 +44,24 @@ public class ConverterMojo extends AbstractMojo {
      */
     private static final Pattern MAP_PATTERN = Pattern.compile("<(.+?),(.+?)>");
 
+    /**
+     * Map类型变量正则
+     */
     private static final Pattern MAP_TYPE_PATTERN = Pattern.compile("(private)\\s+(Map<[^>]+>)\\s+(\\w+);");
 
+    /**
+     * 普通类型变量正则
+     */
     private static final Pattern NORMAL_TYPE_PATTERN = Pattern.compile("(private)\\s+(\\w+)\\s+(\\w+);");
 
+    /**
+     * 集合类型变量正则
+     */
     private static final Pattern LIST_TYPE_PATTERN = Pattern.compile("(private)\\s+(List<[^>]+>)\\s+(\\w+);");
 
+    /**
+     * java代码统一前缀
+     */
     private static final String COMMON_SRC_PATH = "/src/main/java/";
 
     private static final Map<String, String> TYPE_MAP = new HashMap<>();
