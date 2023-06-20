@@ -1,0 +1,2 @@
+# JavaTypescriptConverter
+java pojo类翻译成typescript代码
