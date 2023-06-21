@@ -177,12 +177,12 @@ public class ConverterMojo extends AbstractMojo {
                 typescriptLines.add(textLine.trim());
             }
         }
-        typescriptLines.add("export { " + className + " };");
+        typescriptLines.add("export default " + className);
         return typescriptLines;
     }
 
     private String javaTypeConvertTypescriptType(String propertyType) {
-        return TYPE_MAP.get(propertyType) == null ? "any" : TYPE_MAP.get(propertyType);
+        return TYPE_MAP.get(propertyType) == null ? propertyType : TYPE_MAP.get(propertyType);
     }
 
     private Pair<String, String> getMapType(String mapCode) {
