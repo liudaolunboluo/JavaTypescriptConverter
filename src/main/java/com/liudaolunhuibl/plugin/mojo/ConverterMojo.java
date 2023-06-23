@@ -1,6 +1,8 @@
 package com.liudaolunhuibl.plugin.mojo;
 
 import com.liudaolunhuibl.plugin.pojo.JavaFile;
+import com.liudaolunhuibl.plugin.util.CodeFileUtils;
+import com.liudaolunhuibl.plugin.util.JavaTypeUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.maven.plugin.AbstractMojo;
@@ -39,56 +41,6 @@ public class ConverterMojo extends AbstractMojo {
     @Parameter(property = "javaPackages", required = true)
     private String javaPackages;
 
-    /**
-     * map内部类型正则
-     */
-    private static final Pattern MAP_PATTERN = Pattern.compile("<(.+?),(.+?)>");
-
-    /**
-     * Map类型变量正则
-     */
-    private static final Pattern MAP_TYPE_PATTERN = Pattern.compile("(private)\\s+(Map<[^>]+>)\\s+(\\w+);");
-
-    /**
-     * 普通类型变量正则
-     */
-    private static final Pattern NORMAL_TYPE_PATTERN = Pattern.compile("(private)\\s+(\\w+)\\s+(\\w+);");
-
-    /**
-     * 集合类型变量正则
-     */
-    private static final Pattern LIST_TYPE_PATTERN = Pattern.compile("(private)\\s+(List<[^>]+>)\\s+(\\w+);");
-
-    /**
-     * java代码统一前缀
-     */
-    private static final String COMMON_SRC_PATH = "/src/main/java/";
-
-    private static final Map<String, String> TYPE_MAP = new HashMap<>();
-
-    static {
-        TYPE_MAP.put("byte", "number");
-        TYPE_MAP.put("short", "number");
-        TYPE_MAP.put("int", "number");
-        TYPE_MAP.put("long", "number");
-        TYPE_MAP.put("float", "number");
-        TYPE_MAP.put("double", "number");
-        TYPE_MAP.put("char", "string");
-        TYPE_MAP.put("boolean", "boolean");
-        TYPE_MAP.put("String", "string");
-        TYPE_MAP.put("Byte", "number");
-        TYPE_MAP.put("Short", "number");
-        TYPE_MAP.put("Integer", "number");
-        TYPE_MAP.put("Long", "number");
-        TYPE_MAP.put("Float", "number");
-        TYPE_MAP.put("Double", "number");
-        TYPE_MAP.put("Boolean", "boolean");
-        TYPE_MAP.put("Object", "object");
-        TYPE_MAP.put("Date", "Date");
-        TYPE_MAP.put("BigDecimal", "number");
-
-    }
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         getLog().info("begin to compile java to typescript!");
@@ -97,21 +49,14 @@ public class ConverterMojo extends AbstractMojo {
         getLog().info("targetDirectory: " + targetDirectory);
         File sourceDirectory = new File(project.getBuild().getSourceDirectory());
         List<File> codeFiles = new ArrayList<>();
-        collectFiles(sourceDirectory, codeFiles);
+        CodeFileUtils.collectFiles(sourceDirectory, codeFiles);
         List<JavaFile> javaFiles = new ArrayList<>(codeFiles.size());
-        codeFiles.forEach(c -> {
-            String absolutePath = c.getAbsolutePath();
-            String basePath = absolutePath.substring(absolutePath.lastIndexOf(COMMON_SRC_PATH) + COMMON_SRC_PATH.length());
-            final String[] pathArr = basePath.split("/");
-            String className = pathArr[pathArr.length - 1];
-            String packageName = basePath.replace("/" + className, "").replace("/", ".");
-            javaFiles.add(JavaFile.builder().className(className.replace(".java", "")).packageName(packageName).codeFile(c).build());
-        });
+        codeFiles.forEach(c -> javaFiles.add(CodeFileUtils.buildJavaFileByCodeFile(c)));
         final List<JavaFile> targetJavaFile = javaFiles.stream().filter(j -> packageList.contains(j.getPackageName())).collect(Collectors.toList());
         for (JavaFile targetFile : targetJavaFile) {
-            final List<String> codeLines = readFileLines(targetFile.getCodeFile());
-            if (codeLines == null) {
-                this.getLog().error("targetFile+" + targetFile.getCodeFile().getAbsolutePath() + "+ is empty code file");
+            final List<String> codeLines = CodeFileUtils.readFileLines(targetFile.getCodeFile());
+            if (codeLines.isEmpty()) {
+                this.getLog().error("targetFile:[" + targetFile.getCodeFile().getAbsolutePath() + "] is empty code file");
                 return;
             }
             final List<String> typescriptCode = convert2typescript(codeLines, targetFile.getClassName());
@@ -147,7 +92,7 @@ public class ConverterMojo extends AbstractMojo {
             }
             //暂时不处理内部类的情况，所以剩下的就是字段属性的声明，我们约定规范的java pojo类都应该是private XX xx的，如果不符合就报错
             if (textLine.matches("^\\s*private.*") && !textLine.contains("serialVersionUID")) {
-                final Pair<String, String> typeAndVariableName = getTypeAndVariableName(textLine);
+                final Pair<String, String> typeAndVariableName = JavaTypeUtils.getTypeAndVariableName(textLine);
                 if (typeAndVariableName == null) {
                     getLog().warn("className:[" + className + "]，code :[" + textLine + "] temporarily unable to handle,plz contact the author!");
                     continue;
@@ -156,19 +101,18 @@ public class ConverterMojo extends AbstractMojo {
                 String typescriptType;
                 //根据里氏替换原则，这里集合约定都用List来声明，什么ArrayList、LinkList来声明的都是不规范的，既然不规范就自己转换哈
                 if (propertyType.startsWith("List")) {
-                    final String collectionRealType = getCollectionRealType(propertyType);
-                    typescriptType = javaTypeConvertTypescriptType(collectionRealType) + "[]";
+                    final String collectionRealType = JavaTypeUtils.getCollectionRealType(propertyType);
+                    typescriptType = JavaTypeUtils.javaTypeConvertTypescriptType(collectionRealType) + "[]";
                 } else if (propertyType.startsWith("Map") || propertyType.startsWith("HashMap")) {
-                    final Pair<String, String> mapType = getMapType(propertyType);
+                    final Pair<String, String> mapType = JavaTypeUtils.getMapType(propertyType);
                     if (mapType == null) {
                         typescriptType = "Map";
                     } else {
-                        typescriptType =
-                                "Map<" + javaTypeConvertTypescriptType(mapType.getLeft()) + "," + javaTypeConvertTypescriptType(mapType.getRight())
-                                        + ">";
+                        typescriptType = "Map<" + JavaTypeUtils.javaTypeConvertTypescriptType(mapType.getLeft()) + ","
+                                + JavaTypeUtils.javaTypeConvertTypescriptType(mapType.getRight()) + ">";
                     }
                 } else {
-                    typescriptType = javaTypeConvertTypescriptType(propertyType);
+                    typescriptType = JavaTypeUtils.javaTypeConvertTypescriptType(propertyType);
                 }
                 String typescriptCode = typeAndVariableName.getRight().replace(";", "") + ":" + typescriptType;
                 typescriptLines.add(new String(new char[spaceCount]).replace("\0", " ") + typescriptCode);
@@ -179,70 +123,6 @@ public class ConverterMojo extends AbstractMojo {
         }
         typescriptLines.add("export default " + className);
         return typescriptLines;
-    }
-
-    private String javaTypeConvertTypescriptType(String propertyType) {
-        return TYPE_MAP.get(propertyType) == null ? propertyType : TYPE_MAP.get(propertyType);
-    }
-
-    private Pair<String, String> getMapType(String mapCode) {
-        Matcher matcher = MAP_PATTERN.matcher(mapCode);
-        if (matcher.find()) {
-            return Pair.of(matcher.group(1).trim(), matcher.group(2).trim());
-        }
-        return null;
-    }
-
-    private String getCollectionRealType(String collectionType) {
-        return collectionType.replace("List<", "").replace(">", "");
-    }
-
-    private Pair<String, String> getTypeAndVariableName(String codeLine) {
-        Pattern pattern;
-        if (codeLine.contains("List<")) {
-            pattern = LIST_TYPE_PATTERN;
-        } else if (codeLine.contains("Map<")) {
-            pattern = MAP_TYPE_PATTERN;
-        } else {
-            pattern = NORMAL_TYPE_PATTERN;
-        }
-        Matcher matcher = pattern.matcher(codeLine);
-        if (matcher.find()) {
-            return Pair.of(matcher.group(2), matcher.group(3));
-        }
-        return null;
-
-    }
-
-    private List<String> readFileLines(File file) {
-        List<String> lines = null;
-        try {
-            lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            this.getLog().error(e);
-        }
-        if (lines == null) {
-            return null;
-        }
-        List<String> nonEmptyLines = new ArrayList<>();
-        for (String line : lines) {
-            if (!line.trim().isEmpty()) {
-                nonEmptyLines.add(line);
-            }
-        }
-        return nonEmptyLines;
-    }
-
-    private void collectFiles(File directory, List<File> files) {
-        if (directory.isDirectory()) {
-            for (File file : Objects.requireNonNull(directory.listFiles())) {
-                if (file.isDirectory()) {
-                    collectFiles(file, files);
-                } else {
-                    files.add(file);
-                }
-            }
-        }
     }
 
 }

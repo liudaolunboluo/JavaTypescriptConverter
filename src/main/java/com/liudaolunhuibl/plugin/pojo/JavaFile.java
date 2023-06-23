@@ -16,10 +16,19 @@ import java.io.File;
 @Builder
 public class JavaFile {
 
+    /**
+     * Java文件包名
+     */
     private String packageName;
 
+    /**
+     * java文件类名
+     */
     private String className;
 
+    /**
+     * java文件
+     */
     private File codeFile;
 
 }
