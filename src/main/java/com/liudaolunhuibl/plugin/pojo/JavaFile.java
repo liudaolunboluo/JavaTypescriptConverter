@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * @author yunfanzhang@kuainiugroup.com
@@ -27,8 +28,13 @@ public class JavaFile {
     private String className;
 
     /**
-     * java文件
+     * java代码，一行是一个元素，没有空行
      */
-    private File codeFile;
+    List<String> codeLines;
+
+    /**
+     * java文件绝对路径
+     */
+    private String absolutePath;
 
 }

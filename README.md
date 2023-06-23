@@ -48,7 +48,7 @@ mvn com.liudaolunhuibl:java-typescrpt-converter-maven-plugin:1.0-SNAPSHOT:Typesc
 
 - pojo类应该遵循规范，例如都用privat修饰属性、List和Map都是接口声明而不是HashMap或者ArrayList声明。
 
-- **目前暂不支持静态内部类**，有静态内部类的生成会乱，但也不是不能用，自己手动改一下ts文件吧，后续可能会支持。
+- **目前暂不支持静态内部类**，如果有内部类则不会生成到ts文件中，非内部类的属性不影响，后续可能会支持。
 
 - 如果是嵌套对象，那么会生成一样的类型，例如:`private Student a`转换出来就是：`a:Student`所以需要把这个类型也拷贝到前端项目里或者自己手动改成`any`
 
@@ -60,8 +60,6 @@ mvn com.liudaolunhuibl:java-typescrpt-converter-maven-plugin:1.0-SNAPSHOT:Typesc
 
 1、支持controller文件生成ts的接口调用文件；
 
-2、支持嵌套对象；
+2、支持java代码自定义要转换的ts类型；
 
-3、支持java代码自定义要转换的ts类型；
-
-4、支持java代码自定义ts文件名；
+3、支持java代码自定义ts文件名；
