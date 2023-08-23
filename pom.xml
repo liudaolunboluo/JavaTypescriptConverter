@@ -14,6 +14,9 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <lombok.version>1.18.20</lombok.version>
+        <repository.id>model-snapshot</repository.id>
+        <repository.name>model-snapshot</repository.name>
+        <repository.url>https://jcenter.kuainiujinke.com/artifactory/ai-model-repo-snapshot</repository.url>
     </properties>
 
     <dependencies>
@@ -44,6 +47,11 @@
             <artifactId>commons-io</artifactId>
             <version>2.11.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.javaparser</groupId>
+            <artifactId>javaparser-core</artifactId>
+            <version>3.25.1</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -69,5 +77,43 @@
             </plugin>
         </plugins>
     </build>
+    <repositories>
 
+        <repository>
+            <id>spring</id>
+            <name>spring</name>
+            <url>https://maven.aliyun.com/repository/spring-plugin</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+
+        <repository>
+            <id>alimaven</id>
+            <name>aliyun maven</name>
+            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>cloudera</id>
+            <name>cloudera</name>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+
+
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>${repository.id}</id>
+            <name>${repository.name}</name>
+            <url>${repository.url}</url>
+            <layout>default</layout>
+        </repository>
+    </distributionManagement>
 </project>

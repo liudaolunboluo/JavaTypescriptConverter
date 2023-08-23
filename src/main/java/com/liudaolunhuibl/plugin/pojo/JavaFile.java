@@ -2,6 +2,7 @@ package com.liudaolunhuibl.plugin.pojo;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 
 import java.io.File;
 import java.util.List;
@@ -28,9 +29,19 @@ public class JavaFile {
     private String className;
 
     /**
-     * java代码，一行是一个元素，没有空行
+     * 类作者
      */
-    List<String> codeLines;
+    private String classAuthor;
+
+    /**
+     * 类创建日期
+     */
+    private String classCreateDate;
+
+    /**
+     * 字段信息
+     */
+    List<JavaFieldInfo> fieldInfos;
 
     /**
      * java文件绝对路径
