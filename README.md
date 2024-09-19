@@ -2,6 +2,8 @@
 
 java pojo类翻译成typescript代码
 
+2024/9/19 更新：支持pojo的静态内部类
+
 2023/8/23 更新：实现方式从纯字符串解析操作变为java的ast语法树操作，更加精确和便捷，也为后面的其他需求提供可能性
 
 使用：
@@ -17,7 +19,7 @@ clone本项目，在源码路径下执行:`mvn clean install`
 <plugin>
     <groupId>com.liudaolunhuibl</groupId>
     <artifactId>java-typescrpt-converter-maven-plugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
     <executions>
         <execution>
             <goals>
@@ -44,7 +46,8 @@ mvn com.liudaolunhuibl:java-typescrpt-converter-maven-plugin:1.0-SNAPSHOT:Typesc
 [INFO] begin to compile java to typescript!
 ```
 
-就是开始翻译了（这里用的编译的单词并不正确，因为这不是编译，编译是将高级语言代码转换为低级语言代码的过程，例如将 Java 代码编译为字节码。而将 Java 代码转换为 TypeScript
+就是开始翻译了（这里用的编译的单词并不正确，因为这不是编译，编译是将高级语言代码转换为低级语言代码的过程，例如将 Java 代码编译为字节码。而将 Java 代码转换为
+TypeScript
 代码只是将一种高级语言代码转换为另一种高级语言代码的过程，这种转换通常被称为代码转换或代码翻译。所以这里用编译只是作者装一下逼而已）
 
 执行完毕之后在项目的target目录下会有一个typescript目录，里面就是生成的typescript代码。
@@ -53,16 +56,13 @@ mvn com.liudaolunhuibl:java-typescrpt-converter-maven-plugin:1.0-SNAPSHOT:Typesc
 
 - pojo类应该遵循规范，例如都用privat修饰属性、List和Map都是接口声明而不是HashMap或者ArrayList声明。
 
-- **目前暂不支持静态内部类**，如果有内部类则不会生成到ts文件中，非内部类的属性不影响，后续可能会支持。
-
 - 如果是嵌套对象，那么会生成一样的类型，例如:`private Student a`转换出来就是：`a:Student`所以需要把这个类型也拷贝到前端项目里或者自己手动改成`any`
 
 - 不支持有继承关系的属性自动映射到子类中，继承关系会原封不动的到生成的ts代码里，也就是说你的父类必须也在你的前端项目里，如果不想可以手动拷贝父类属性到子类中。
 
 版本规划todo：
 
-1、支持controller文件生成ts的接口调用文件；
 
-2、支持java代码自定义要转换的ts类型；
+1、支持java代码自定义要转换的ts类型；
 
-3、支持java代码自定义ts文件名；
+2、支持java代码自定义ts文件名；

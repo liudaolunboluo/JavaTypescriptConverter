@@ -19,6 +19,24 @@ public class LogContext {
         LOG_LOCAL.set(log);
     }
 
+    public void error(String message) {
+        if (getLog() != null) {
+            getLog().error(message);
+        }
+    }
+
+    public void error(String message, Throwable e) {
+        if (getLog() != null) {
+            getLog().error(message, e);
+        }
+    }
+
+    public void info(String message) {
+        if (getLog() != null) {
+            getLog().info(message);
+        }
+    }
+
     public Log getLog() {
         return LOG_LOCAL.get();
     }

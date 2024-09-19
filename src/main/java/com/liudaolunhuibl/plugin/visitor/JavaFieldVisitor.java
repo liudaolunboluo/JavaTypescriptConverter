@@ -1,5 +1,7 @@
 package com.liudaolunhuibl.plugin.visitor;
 
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
@@ -14,8 +16,10 @@ import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author yunfanzhang@kuainiugroup.com
@@ -37,12 +41,33 @@ public class JavaFieldVisitor extends VoidVisitorAdapter<Void> {
     @Getter
     private String classCreateDate;
 
+    @Getter
+    private final Set<String> innerClassName = new HashSet<>();
+
     @Override
     public void visit(FieldDeclaration fieldDeclaration, Void arg) {
         super.visit(fieldDeclaration, arg);
         String fieldName = fieldDeclaration.getVariables().get(0).getNameAsString();
-        Type fieldType = fieldDeclaration.getCommonType();
+        if (serialVersionUID.equals(fieldName)) {
+            return;
+        }
+
+        final JavaFieldInfo javaFieldInfo = generateJavaFieldInfo(fieldDeclaration, fieldName);
+        fieldInfos.add(javaFieldInfo);
+    }
+
+    private JavaFieldInfo generateJavaFieldInfo(FieldDeclaration fieldDeclaration, String fieldName) {
+        Node parentNode = fieldDeclaration.getParentNode().orElse(null);
+        String className = ((ClassOrInterfaceDeclaration) parentNode).getNameAsString();
+        if (parentNode instanceof ClassOrInterfaceDeclaration) {
+            Node grandParentNode = parentNode.getParentNode().orElse(null);
+            if (!(grandParentNode instanceof CompilationUnit)) {
+                innerClassName.add(((ClassOrInterfaceDeclaration) parentNode).getNameAsString());
+            }
+        }
+
         // 检查字段类型是否为泛型类型 genericType
+        Type fieldType = fieldDeclaration.getCommonType();
         List<String> genericType = Lists.newArrayList();
         if (fieldType instanceof ClassOrInterfaceType) {
             ClassOrInterfaceType classOrInterfaceType = (ClassOrInterfaceType) fieldType;
@@ -62,19 +87,17 @@ public class JavaFieldVisitor extends VoidVisitorAdapter<Void> {
             Comment comment = commentOptional.get();
             commentContent = comment.getContent();
         }
-        if (!serialVersionUID.equals(fieldName)) {
-            final JavaFieldInfo javaFieldInfo = JavaFieldInfo.builder().fieldName(fieldName).fieldType(fieldType.asString())
-                    .comment(commentContent.replace("*", "").replaceAll("[\r\n]", "").trim()).isCollection(false).isMap(false).build();
-            if (genericType.size() == 1) {
-                javaFieldInfo.setIsCollection(true);
-                javaFieldInfo.setCollGenericType(genericType.get(0));
-            }
-            if (genericType.size() == 2) {
-                javaFieldInfo.setIsMap(true);
-                javaFieldInfo.setMapGenericType(Pair.of(genericType.get(0), genericType.get(1)));
-            }
-            fieldInfos.add(javaFieldInfo);
+        final JavaFieldInfo javaFieldInfo = JavaFieldInfo.builder().fieldName(fieldName).fieldType(fieldType.asString()).className(className)
+                .comment(commentContent.replace("*", "").replaceAll("[\r\n]", "").trim()).isCollection(false).isMap(false).build();
+        if (genericType.size() == 1) {
+            javaFieldInfo.setIsCollection(true);
+            javaFieldInfo.setCollGenericType(genericType.get(0));
         }
+        if (genericType.size() == 2) {
+            javaFieldInfo.setIsMap(true);
+            javaFieldInfo.setMapGenericType(Pair.of(genericType.get(0), genericType.get(1)));
+        }
+        return javaFieldInfo;
     }
 
     @Override
