@@ -2,9 +2,7 @@ package com.liudaolunhuibl.plugin.pojo;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 
-import java.io.File;
 import java.util.List;
 
 /**
@@ -47,5 +45,10 @@ public class JavaFile {
      * java文件绝对路径
      */
     private String absolutePath;
+
+    /**
+     * 内部类
+     */
+    private List<String> innerClass;
 
 }

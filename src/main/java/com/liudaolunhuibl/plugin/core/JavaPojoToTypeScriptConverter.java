@@ -34,13 +34,13 @@ public class JavaPojoToTypeScriptConverter {
     public void convert() {
         //找到配置的包下的java文件
         List<JavaFile> targetJavaFile = findJavaFilesFromTarget(this.targetPackageList, this.sourceDirectory);
-        if (targetJavaFile.isEmpty()) {
-            LogContext.getLog().error("config package:[" + StringUtils.join(this.targetPackageList, ",") + "] is all has no code,plz check it");
+        if (targetJavaFile == null || targetJavaFile.isEmpty()) {
+            LogContext.error("config package:[" + StringUtils.join(this.targetPackageList, ",") + "] is all has no code,plz check it");
             return;
         }
         //根据java文件生成typescript文件
         generateTypescriptFile(this.targetDirectory, targetJavaFile);
-        LogContext.getLog().info("success to convert java to typescript!,plz watch it to ：" + this.targetDirectory);
+        LogContext.info("success to convert java to typescript!,plz watch it to ：" + this.targetDirectory);
     }
 
     private void generateTypescriptFile(String targetDirectory, List<JavaFile> targetJavaFiles) {
@@ -56,31 +56,37 @@ public class JavaPojoToTypeScriptConverter {
                     targetDirectory + "/" + targetFile.getPackageName().replace(".", "/") + "/" + targetFile.getClassName() + ".ts";
             FileUtils.writeStringToFile(new File(targetFileName), String.join("\n", typescriptCode), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            LogContext.getLog().error(targetFile.getAbsolutePath() + "file convert fail", e);
+            LogContext.error(targetFile.getAbsolutePath() + "file convert fail", e);
         }
     }
 
     public List<JavaFile> findJavaFilesFromTarget(List<String> packageList, String sourceDirectory) {
         List<File> codeFiles = CodeFileHelper.getTargetPackageFile(sourceDirectory, packageList);
-        if (codeFiles.isEmpty()) {
-            LogContext.getLog().error("config package:[" + StringUtils.join(packageList, ",") + "] is all empty,plz check it");
+        if (codeFiles == null || codeFiles.isEmpty()) {
+            LogContext.error("config package:[" + StringUtils.join(packageList, ",") + "] is all empty,plz check it");
             return new ArrayList<>();
         }
         List<JavaFile> targetJavaFile = new ArrayList<>(codeFiles.size());
         for (File c : codeFiles) {
             //替换为ast语法树来解析而不是解析字符串
-            final JavaFile javaFile = JavaSourceCodeAnalyzer.generateJavaFileFromFile(c);
-            if (javaFile == null) {
-                LogContext.getLog().error("targetFile:[" + c.getAbsolutePath() + "] is empty code file");
+            //这里是List的原因是可能存在static class内部类
+            List<JavaFile> javaFiles = JavaSourceCodeAnalyzer.generateJavaFileFromFile(c);
+            if (javaFiles == null || javaFiles.isEmpty()) {
+                LogContext.error("targetFile:[" + c.getAbsolutePath() + "] is empty code file");
                 continue;
             }
-            targetJavaFile.add(javaFile);
+            targetJavaFile.addAll(javaFiles);
         }
         return targetJavaFile;
     }
 
     private List<String> convert2typescript(JavaFile javaFile) {
         List<String> typescriptLines = new ArrayList<>(javaFile.getFieldInfos().size());
+        if (javaFile.getInnerClass() != null && !javaFile.getInnerClass().isEmpty()) {
+            for (String innerClass : javaFile.getInnerClass()) {
+                typescriptLines.add("import " + innerClass + " from " + "\"./" + innerClass + "\"");
+            }
+        }
         typescriptLines.add("/**");
         typescriptLines.add(" * @author " + javaFile.getClassAuthor());
         typescriptLines.add(" * @date " + javaFile.getClassCreateDate());
@@ -93,19 +99,19 @@ public class JavaPojoToTypeScriptConverter {
                 typescriptLines.add(BODY_DISTORTION_SYMBOL + "/**");
                 typescriptLines.add(BODY_DISTORTION_SYMBOL + " * " + fieldInfo.getComment());
                 typescriptLines.add(BODY_DISTORTION_SYMBOL + "*/");
-                StringBuilder sb = new StringBuilder();
-                sb.append(BODY_DISTORTION_SYMBOL).append(fieldInfo.getFieldName()).append(": ");
-                if (Boolean.TRUE.equals(fieldInfo.getIsCollection())) {
-                    sb.append(JavaTypeMapping.javaTypeConvertTypescriptType(fieldInfo.getCollGenericType()));
-                    sb.append("[]");
-                } else if (Boolean.TRUE.equals(fieldInfo.getIsMap())) {
-                    sb.append("Map<").append(JavaTypeMapping.javaTypeConvertTypescriptType(fieldInfo.getMapGenericType().getLeft())).append(", ")
-                            .append(JavaTypeMapping.javaTypeConvertTypescriptType(fieldInfo.getMapGenericType().getRight())).append(">");
-                } else {
-                    sb.append(JavaTypeMapping.javaTypeConvertTypescriptType(fieldInfo.getFieldType()));
-                }
-                typescriptLines.add(sb.toString());
             }
+            StringBuilder sb = new StringBuilder();
+            sb.append(BODY_DISTORTION_SYMBOL).append(fieldInfo.getFieldName()).append(": ");
+            if (Boolean.TRUE.equals(fieldInfo.getIsCollection())) {
+                sb.append(JavaTypeMapping.javaTypeConvertTypescriptType(fieldInfo.getCollGenericType()));
+                sb.append("[]");
+            } else if (Boolean.TRUE.equals(fieldInfo.getIsMap())) {
+                sb.append("Map<").append(JavaTypeMapping.javaTypeConvertTypescriptType(fieldInfo.getMapGenericType().getLeft())).append(", ")
+                        .append(JavaTypeMapping.javaTypeConvertTypescriptType(fieldInfo.getMapGenericType().getRight())).append(">");
+            } else {
+                sb.append(JavaTypeMapping.javaTypeConvertTypescriptType(fieldInfo.getFieldType()));
+            }
+            typescriptLines.add(sb.toString());
         }
         typescriptLines.add("}");
         typescriptLines.add("export default " + javaFile.getClassName() + ";");

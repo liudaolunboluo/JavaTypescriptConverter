@@ -1,11 +1,8 @@
 package com.liudaolunhuibl.plugin.pojo;
 
-import com.github.javaparser.ast.type.Type;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
 
 /**
  * @author yunfanzhang@kuainiugroup.com
@@ -17,6 +14,11 @@ import java.util.List;
 @Data
 @Builder
 public class JavaFieldInfo {
+
+    /**
+     * java文件类名
+     */
+    private String className;
 
     /**
      * 字段名称
