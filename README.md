@@ -2,6 +2,8 @@
 
 java pojo类翻译成typescript代码
 
+2025/2/19 更新：支持生成以java包为单位的单个ts文件并且是export interface取代了原来生成的ts代码中的class
+
 2024/9/19 更新：支持pojo的静态内部类
 
 2023/8/23 更新：实现方式从纯字符串解析操作变为java的ast语法树操作，更加精确和便捷，也为后面的其他需求提供可能性
@@ -30,10 +32,11 @@ clone本项目，在源码路径下执行:`mvn clean install`
     </executions>
     <configuration>
         <javaPackages>需要翻译的java文件的包路径，多个用英文分号隔开，例如:com.a.b.dto;com.d.r.bo</javaPackages>
+        <typescriptMode>class or interface</typescriptMode>
     </configuration>
 </plugin>
 ```
-
+typescriptMode不是必填，默认是class，可以修改为interface，目前只支持这两种
 然后可以在idea的右侧的Maven菜单里指定项目的Plugins里找到该插件，然后双击执行，也可以在命令行中执行：
 
 ````shell
@@ -61,7 +64,6 @@ TypeScript
 - 不支持有继承关系的属性自动映射到子类中，继承关系会原封不动的到生成的ts代码里，也就是说你的父类必须也在你的前端项目里，如果不想可以手动拷贝父类属性到子类中。
 
 版本规划todo：
-
 
 1、支持java代码自定义要转换的ts类型；
 
