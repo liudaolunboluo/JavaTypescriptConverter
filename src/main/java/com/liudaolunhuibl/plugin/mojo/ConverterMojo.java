@@ -2,6 +2,8 @@ package com.liudaolunhuibl.plugin.mojo;
 
 import com.liudaolunhuibl.plugin.context.LogContext;
 import com.liudaolunhuibl.plugin.core.JavaPojoToTypeScriptConverter;
+import com.liudaolunhuibl.plugin.enums.TypescriptModeEnum;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -28,6 +30,9 @@ public class ConverterMojo extends AbstractMojo {
     @Parameter(property = "javaPackages", required = true)
     private String javaPackages;
 
+    @Parameter(property = "javaPackages", required = false)
+    private String typescriptMode;
+
     /**
      * 最后生成路径
      */
@@ -35,12 +40,19 @@ public class ConverterMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        //模式缺省为class模式
+        if (StringUtils.isBlank(typescriptMode)) {
+            typescriptMode = TypescriptModeEnum.CLASS_MODEL.getMode();
+        }
+        if (!TypescriptModeEnum.isValidTypescriptMode(typescriptMode)) {
+            throw new MojoExecutionException("typescriptMode must be either 'class' or 'interface'.");
+        }
         LogContext.saveLog(getLog());
         LogContext.getLog().info("begin to convert java to typescript!");
         List<String> packageList = Arrays.asList(javaPackages.split(";"));
         String targetDirectory = project.getBuild().getDirectory() + FINAL_TARGET_DIR;
         final JavaPojoToTypeScriptConverter converter = JavaPojoToTypeScriptConverter.builder().targetPackageList(packageList)
-                .sourceDirectory(project.getBuild().getSourceDirectory()).targetDirectory(targetDirectory).build();
+                .sourceDirectory(project.getBuild().getSourceDirectory()).targetDirectory(targetDirectory).typescriptMode(typescriptMode).build();
         converter.convert();
         LogContext.clear();
     }
