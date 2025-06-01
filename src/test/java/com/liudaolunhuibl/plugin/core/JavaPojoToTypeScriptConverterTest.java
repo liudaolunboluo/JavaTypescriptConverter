@@ -36,7 +36,7 @@ public class JavaPojoToTypeScriptConverterTest {
     public void testRecordInterface() {
         String path = System.getProperty("user.dir") + "/src/test/java";
         final JavaPojoToTypeScriptConverter converter = JavaPojoToTypeScriptConverter.builder()
-                .targetPackageList(Lists.newArrayList("com.liudaolunhuibl.plugin.core.pojo.record")).sourceDirectory(path)
+                .targetPackageList(Lists.newArrayList("com.liudaolunhuibl.plugin.core.record")).sourceDirectory(path)
                 .targetDirectory(path + "/typescript").typescriptMode(TypescriptModeEnum.INTERFACE_MODEL.getMode()).build();
         converter.convert();
     }

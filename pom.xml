@@ -65,7 +65,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.15.1</version>
                 <!-- 插件执行命令前缀 -->
                 <configuration>
                     <goalPrefix>java-typescript-converter</goalPrefix>
