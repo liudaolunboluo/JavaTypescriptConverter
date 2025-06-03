@@ -14,9 +14,6 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <lombok.version>1.18.30</lombok.version>
-        <repository.id>model-snapshot</repository.id>
-        <repository.name>model-snapshot</repository.name>
-        <repository.url>https://jcenter.kuainiujinke.com/artifactory/ai-model-repo-snapshot</repository.url>
     </properties>
 
     <dependencies>

@@ -1,7 +1,17 @@
 package com.liudaolunhuibl.plugin.core.pojo.record;
 
-public record NormalRecord(String name,
+public record NormalRecord(
+        /**
+         * 姓名
+         */
+        String name,
 
-                           String address,
+        /**
+         * 地址
+         */
+        String address,
 
-                           Integer number) {}
+        /**
+         * 号码
+         */
+        Integer number) {}
