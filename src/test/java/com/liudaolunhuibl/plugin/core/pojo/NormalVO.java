@@ -12,9 +12,18 @@ import lombok.Data;
 @Data
 public class NormalVO {
 
+    /**
+     * 姓名
+     */
     private String name;
 
+    /**
+     * 地址
+     */
     private String address;
 
+    /**
+     * 号码
+     */
     private Integer number;
 }

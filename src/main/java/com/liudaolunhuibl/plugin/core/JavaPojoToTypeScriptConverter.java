@@ -118,7 +118,8 @@ public class JavaPojoToTypeScriptConverter {
             List<JavaFile> javaFiles = JavaSourceCodeAnalyzer.generateJavaFileFromFile(c);
             if (javaFiles == null || javaFiles.isEmpty()) {
                 LogContext.error("targetFile:[" + c.getAbsolutePath() + "] is empty code file");
-                continue;
+                // continue;
+                throw new IllegalArgumentException("targetFile:[" + c.getAbsolutePath() + "] analyze fail!perhaps it is empty file!check it plz");
             }
             targetJavaFile.addAll(javaFiles);
         }

@@ -2,6 +2,8 @@
 
 java pojo类翻译成typescript代码
 
+2025/6/01 更新：支持jdk17+的record
+
 2025/2/19 更新：支持生成以java包为单位的单个ts文件并且是export interface取代了原来生成的ts代码中的class
 
 2024/9/19 更新：支持pojo的静态内部类
@@ -21,7 +23,7 @@ clone本项目，在源码路径下执行:`mvn clean install`
 <plugin>
     <groupId>com.liudaolunhuibl</groupId>
     <artifactId>java-typescrpt-converter-maven-plugin</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>2.0-SNAPSHOT</version>
     <executions>
         <execution>
             <goals>
@@ -36,8 +38,9 @@ clone本项目，在源码路径下执行:`mvn clean install`
     </configuration>
 </plugin>
 ```
-typescriptMode不是必填，默认是class，可以修改为interface，目前只支持这两种
-然后可以在idea的右侧的Maven菜单里指定项目的Plugins里找到该插件，然后双击执行，也可以在命令行中执行：
+typescriptMode不是必填，默认是class，可以修改为interface，目前只支持这两种;这两种的区别是interface模式下指定的包只会生成一个ts文件，名字就是包名，class模式下是一个java class
+生成一个ts文件。
+可以在idea的右侧的Maven菜单里指定项目的Plugins里找到该插件，然后双击执行，也可以在命令行中执行：
 
 ````shell
 mvn com.liudaolunhuibl:java-typescrpt-converter-maven-plugin:1.0-SNAPSHOT:TypescriptConverter
@@ -57,14 +60,10 @@ TypeScript
 
 注意：
 
-- pojo类应该遵循规范，例如都用privat修饰属性、List和Map都是接口声明而不是HashMap或者ArrayList声明。
+- pojo类应该遵循规范，例如都用private修饰属性、List和Map都是接口声明而不是HashMap或者ArrayList声明。
 
 - 如果是嵌套对象，那么会生成一样的类型，例如:`private Student a`转换出来就是：`a:Student`所以需要把这个类型也拷贝到前端项目里或者自己手动改成`any`
 
 - 不支持有继承关系的属性自动映射到子类中，继承关系会原封不动的到生成的ts代码里，也就是说你的父类必须也在你的前端项目里，如果不想可以手动拷贝父类属性到子类中。
 
-版本规划todo：
-
-1、支持java代码自定义要转换的ts类型；
-
-2、支持java代码自定义ts文件名；
+- pojo类支持record，但是要求maven版本3.7.0+，建议使用maven最新版本3.9.9

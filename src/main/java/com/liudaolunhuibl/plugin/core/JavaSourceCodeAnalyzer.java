@@ -2,6 +2,7 @@ package com.liudaolunhuibl.plugin.core;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -29,7 +30,9 @@ public class JavaSourceCodeAnalyzer {
 
     public List<JavaFile> generateJavaFileFromFile(File sourceCodeFile) {
         try {
-            JavaParser javaParser = new JavaParser();
+            ParserConfiguration config = new ParserConfiguration();
+            config.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_21);
+            JavaParser javaParser = new JavaParser(config);
             ParseResult<CompilationUnit> compilationUnitParseResult = javaParser.parse(sourceCodeFile);
             JavaFieldVisitor fieldVisitor = new JavaFieldVisitor();
             if (!compilationUnitParseResult.getResult().isPresent()) {
@@ -39,6 +42,10 @@ public class JavaSourceCodeAnalyzer {
             String packageName = compilationUnitParseResult.getResult().get().getPackageDeclaration().map(PackageDeclaration::getNameAsString)
                     .orElse("");
             final List<JavaFieldInfo> fieldInfos = fieldVisitor.getFieldInfos();
+            if (fieldInfos == null || fieldInfos.isEmpty()) {
+                LogContext.error("get targetFile:[" + sourceCodeFile.getAbsolutePath() + "] fields fail!");
+                return null;
+            }
             Map<String, List<JavaFieldInfo>> groupFields = fieldInfos.stream().collect(Collectors.groupingBy(JavaFieldInfo::getClassName));
             //本源码java文件的java类名称
             String topClassName = compilationUnitParseResult.getResult().get().findFirst(ClassOrInterfaceDeclaration.class)
@@ -60,7 +67,12 @@ public class JavaSourceCodeAnalyzer {
             });
             return result;
         } catch (Exception e) {
-            LogContext.getLog().error("分析" + sourceCodeFile.getName() + "文件失败!=", e);
+            //adaptation unit test
+            if (LogContext.getLog() == null) {
+                e.printStackTrace();
+            } else {
+                LogContext.getLog().error("分析" + sourceCodeFile.getName() + "文件失败!=", e);
+            }
             return new ArrayList<>();
         }
     }

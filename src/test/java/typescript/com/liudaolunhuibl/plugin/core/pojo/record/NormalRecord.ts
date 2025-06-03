@@ -1,8 +1,8 @@
 /**
- * @author yunfanzhang@kuainiugroup.com
- * @date 2024/9/19
+ * @author null
+ * @date null
 */
-class NormalVO {
+class NormalRecord {
    /**
     * 姓名
    */
@@ -16,4 +16,4 @@ class NormalVO {
    */
    number: number
 }
-export default NormalVO;
+export default NormalRecord;
